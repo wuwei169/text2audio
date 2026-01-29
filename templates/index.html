@@ -195,8 +195,55 @@
 
     <div class="info">
         <p><strong>Tip:</strong> Add this page to your home screen for quick access.</p>
-        <p>Supports most article URLs. For paywalled content, copy and paste the text instead.</p>
+        <p><strong>Note:</strong> URL conversion may timeout on long articles. Paste text instead.</p>
     </div>
+
+    <details class="mac-help">
+        <summary>Mac Script (better quality)</summary>
+        <div class="mac-help-content">
+            <p>For better voice quality, use the local script on your Mac:</p>
+            <code>~/webpage2audio "URL" output.mp3</code>
+            <p><strong>Examples:</strong></p>
+            <code>~/webpage2audio "https://example.com/article" article.mp3</code>
+            <code>~/webpage2audio "URL" -v en-US-AndrewNeural output.mp3</code>
+            <p><strong>Options:</strong></p>
+            <code>~/webpage2audio --list-voices</code>
+            <code>~/webpage2audio --help</code>
+        </div>
+    </details>
+
+    <style>
+        .mac-help {
+            margin-top: 16px;
+            background: #e8e8ed;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+        .mac-help summary {
+            padding: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #1d1d1f;
+        }
+        .mac-help-content {
+            padding: 0 12px 12px 12px;
+            color: #6e6e73;
+        }
+        .mac-help code {
+            display: block;
+            background: #1d1d1f;
+            color: #30d158;
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        .mac-help p {
+            margin: 8px 0;
+        }
+    </style>
 
     <script>
         const form = document.getElementById('ttsForm');
