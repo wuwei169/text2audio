@@ -1,15 +1,13 @@
 import os
-import asyncio
 import tempfile
 from flask import Flask, request, send_file, jsonify, render_template
 import trafilatura
-import edge_tts
+from gtts import gTTS
 
 app = Flask(__name__)
 
 # Configuration
-DEFAULT_VOICE = "en-US-AriaNeural"
-MAX_TEXT_LENGTH = 500000  # ~500K characters max
+MAX_TEXT_LENGTH = 100000  # gTTS works better with shorter texts
 
 @app.route("/", methods=["GET"])
 def index():
@@ -17,29 +15,16 @@ def index():
 
 @app.route("/voices", methods=["GET"])
 def list_voices():
-    """Return popular voice options"""
+    """Return available accent options"""
     return jsonify({
-        "popular": {
-            "female": [
-                {"id": "en-US-AriaNeural", "description": "News/Novel, positive and confident"},
-                {"id": "en-US-AvaNeural", "description": "Conversational, friendly"},
-                {"id": "en-US-JennyNeural", "description": "General purpose"},
-                {"id": "en-GB-SoniaNeural", "description": "British accent"}
-            ],
-            "male": [
-                {"id": "en-US-AndrewNeural", "description": "Warm and confident"},
-                {"id": "en-US-ChristopherNeural", "description": "News/Novel, authoritative"},
-                {"id": "en-US-GuyNeural", "description": "General purpose"},
-                {"id": "en-GB-RyanNeural", "description": "British accent"}
-            ]
-        },
-        "default": DEFAULT_VOICE
+        "accents": [
+            {"id": "com", "description": "US English"},
+            {"id": "co.uk", "description": "UK English"},
+            {"id": "com.au", "description": "Australian English"},
+            {"id": "co.in", "description": "Indian English"}
+        ],
+        "default": "com"
     })
-
-async def generate_audio(text: str, voice: str, output_path: str):
-    """Generate audio using edge-tts"""
-    communicate = edge_tts.Communicate(text, voice)
-    await communicate.save(output_path)
 
 @app.route("/tts", methods=["POST"])
 def text_to_speech():
@@ -53,7 +38,7 @@ def text_to_speech():
 
     url = data.get("url", "").strip()
     text = data.get("text", "").strip()
-    voice = data.get("voice", DEFAULT_VOICE).strip()
+    accent = data.get("voice", "com").strip()  # Keep 'voice' param name for compatibility
 
     # Validate input
     if not url and not text:
@@ -78,13 +63,14 @@ def text_to_speech():
             "error": f"Text too long ({len(text)} chars). Maximum is {MAX_TEXT_LENGTH} characters."
         }), 400
 
-    # Generate audio
+    # Generate audio using gTTS
     try:
         with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
             output_path = tmp.name
 
-        # Run async edge-tts
-        asyncio.run(generate_audio(text, voice, output_path))
+        # Use gTTS to generate audio
+        tts = gTTS(text=text, lang='en', tld=accent)
+        tts.save(output_path)
 
         # Send file and clean up after
         response = send_file(
