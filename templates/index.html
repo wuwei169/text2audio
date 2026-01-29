@@ -183,16 +183,6 @@
             <textarea id="text" name="text" placeholder="Paste your text here..."></textarea>
         </div>
 
-        <div class="input-group">
-            <label for="voice">Accent</label>
-            <select id="voice" name="voice">
-                <option value="com" selected>US English</option>
-                <option value="co.uk">UK English</option>
-                <option value="com.au">Australian English</option>
-                <option value="co.in">Indian English</option>
-            </select>
-        </div>
-
         <button type="submit" id="convertBtn">Convert to Audio</button>
     </form>
 
@@ -223,7 +213,6 @@
 
             const url = document.getElementById('url').value.trim();
             const text = document.getElementById('text').value.trim();
-            const voice = document.getElementById('voice').value;
 
             if (!url && !text) {
                 showStatus('Please enter a URL or paste some text.', 'error');
@@ -242,7 +231,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ url, text, voice })
+                    body: JSON.stringify({ url, text })
                 });
 
                 if (!response.ok) {
