@@ -1,7 +1,7 @@
 import os
 import asyncio
 import tempfile
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, render_template
 import trafilatura
 import edge_tts
 
@@ -13,20 +13,7 @@ MAX_TEXT_LENGTH = 500000  # ~500K characters max
 
 @app.route("/", methods=["GET"])
 def index():
-    return jsonify({
-        "service": "Text-to-Speech API",
-        "endpoints": {
-            "POST /tts": {
-                "description": "Convert text or URL to audio",
-                "parameters": {
-                    "url": "URL to extract text from (optional)",
-                    "text": "Raw text to convert (optional, use either url or text)",
-                    "voice": f"Voice to use (default: {DEFAULT_VOICE})"
-                }
-            },
-            "GET /voices": "List available voices"
-        }
-    })
+    return render_template("index.html")
 
 @app.route("/voices", methods=["GET"])
 def list_voices():

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Text to Audio</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f7;
+            min-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1d1d1f;
+            font-size: 24px;
+            margin-bottom: 24px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #1d1d1f;
+            font-size: 14px;
+        }
+
+        input[type="url"], textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            -webkit-appearance: none;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #0071e3;
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
+        }
+
+        .or-divider {
+            text-align: center;
+            color: #86868b;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        button:hover {
+            background: #0077ed;
+        }
+
+        button:disabled {
+            background: #86868b;
+            cursor: not-allowed;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .status.loading {
+            display: block;
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .audio-container {
+            margin-top: 24px;
+            display: none;
+        }
+
+        .audio-container.visible {
+            display: block;
+        }
+
+        audio {
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .download-btn {
+            background: #34c759;
+        }
+
+        .download-btn:hover {
+            background: #30b350;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info {
+            margin-top: 24px;
+            padding: 12px;
+            background: #e8e8ed;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #6e6e73;
+        }
+
+        .info p {
+            margin: 4px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Text to Audio</h1>
+
+    <form id="ttsForm">
+        <div class="input-group">
+            <label for="url">Article URL</label>
+            <input type="url" id="url" name="url" placeholder="https://example.com/article">
+        </div>
+
+        <div class="or-divider">— or —</div>
+
+        <div class="input-group">
+            <label for="text">Paste Text</label>
+            <textarea id="text" name="text" placeholder="Paste your text here..."></textarea>
+        </div>
+
+        <div class="input-group">
+            <label for="voice">Voice</label>
+            <select id="voice" name="voice">
+                <optgroup label="Female">
+                    <option value="en-US-AriaNeural" selected>Aria (US) - News/Novel</option>
+                    <option value="en-US-AvaNeural">Ava (US) - Friendly</option>
+                    <option value="en-US-JennyNeural">Jenny (US) - General</option>
+                    <option value="en-GB-SoniaNeural">Sonia (UK)</option>
+                </optgroup>
+                <optgroup label="Male">
+                    <option value="en-US-AndrewNeural">Andrew (US) - Warm</option>
+                    <option value="en-US-ChristopherNeural">Christopher (US) - Authoritative</option>
+                    <option value="en-US-GuyNeural">Guy (US) - General</option>
+                    <option value="en-GB-RyanNeural">Ryan (UK)</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <button type="submit" id="convertBtn">Convert to Audio</button>
+    </form>
+
+    <div id="status" class="status"></div>
+
+    <div id="audioContainer" class="audio-container">
+        <audio id="audioPlayer" controls></audio>
+        <button id="downloadBtn" class="download-btn">Download MP3</button>
+    </div>
+
+    <div class="info">
+        <p><strong>Tip:</strong> Add this page to your home screen for quick access.</p>
+        <p>Supports most article URLs. For paywalled content, copy and paste the text instead.</p>
+    </div>
+
+    <script>
+        const form = document.getElementById('ttsForm');
+        const convertBtn = document.getElementById('convertBtn');
+        const status = document.getElementById('status');
+        const audioContainer = document.getElementById('audioContainer');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        let audioBlob = null;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const url = document.getElementById('url').value.trim();
+            const text = document.getElementById('text').value.trim();
+            const voice = document.getElementById('voice').value;
+
+            if (!url && !text) {
+                showStatus('Please enter a URL or paste some text.', 'error');
+                return;
+            }
+
+            // Disable button and show loading
+            convertBtn.disabled = true;
+            convertBtn.innerHTML = '<span class="spinner"></span>Converting...';
+            audioContainer.classList.remove('visible');
+            showStatus('Extracting text and generating audio... This may take a minute for long articles.', 'loading');
+
+            try {
+                const response = await fetch('/tts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url, text, voice })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Conversion failed');
+                }
+
+                audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+
+                audioPlayer.src = audioUrl;
+                audioContainer.classList.add('visible');
+                showStatus('Audio ready! Press play to listen.', 'success');
+
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+            } finally {
+                convertBtn.disabled = false;
+                convertBtn.textContent = 'Convert to Audio';
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (!audioBlob) return;
+
+            const url = URL.createObjectURL(audioBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'audio.mp3';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+
+        // Clear URL when text is entered and vice versa
+        document.getElementById('url').addEventListener('input', function() {
+            if (this.value) document.getElementById('text').value = '';
+        });
+
+        document.getElementById('text').addEventListener('input', function() {
+            if (this.value) document.getElementById('url').value = '';
+        });
+    </script>
+</body>
+</html>
